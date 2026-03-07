@@ -1,0 +1,705 @@
+openapi: 3.1.0
+info:
+  title: Backend API
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Health]
+      summary: Liveness check
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: backend-api
+  /health/ready:
+    get:
+      operationId: getReadiness
+      tags: [Health]
+      summary: Dependency readiness check
+      responses:
+        '200':
+          description: Service dependencies are ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Readiness'
+        '503':
+          description: Service dependencies are not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Readiness'
+  /auth/register:
+    post:
+      operationId: register
+      tags: [Auth]
+      summary: Register a local account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/login:
+    post:
+      operationId: login
+      tags: [Auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/refresh:
+    post:
+      operationId: refresh
+      tags: [Auth]
+      summary: Rotate tokens using a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens rotated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [Auth]
+      summary: Revoke a refresh session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '204':
+          description: Logged out successfully
+  /auth/me:
+    get:
+      operationId: me
+      tags: [Auth]
+      summary: Get the authenticated user
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /notification-templates:
+    get:
+      operationId: listNotificationTemplates
+      tags: [Notification Templates]
+      summary: List notification templates
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: Available notification templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationTemplate'
+    post:
+      operationId: createNotificationTemplate
+      tags: [Notification Templates]
+      summary: Create a notification template
+      security:
+        - access-token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationTemplateRequest'
+      responses:
+        '201':
+          description: Notification template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+        '409':
+          description: Template name already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [Notifications]
+      summary: List current user notifications
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+    post:
+      operationId: createNotification
+      tags: [Notifications]
+      summary: Queue a notification
+      security:
+        - access-token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationRequest'
+      responses:
+        '201':
+          description: Notification queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '409':
+          description: Duplicate dedupe key
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /notifications/{id}/deliveries:
+    get:
+      operationId: getNotificationDeliveries
+      tags: [Notifications]
+      summary: List delivery attempts for a notification
+      security:
+        - access-token: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Delivery attempts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationDelivery'
+  /notifications/{id}/logs:
+    get:
+      operationId: getNotificationLogs
+      tags: [Notifications]
+      summary: List lifecycle log entries for a notification
+      security:
+        - access-token: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notification lifecycle logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationLog'
+  /notification-preferences:
+    get:
+      operationId: listNotificationPreferences
+      tags: [Notification Preferences]
+      summary: List current user notification preferences
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationPreference'
+    post:
+      operationId: upsertNotificationPreference
+      tags: [Notification Preferences]
+      summary: Create or update a notification preference
+      security:
+        - access-token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertNotificationPreferenceRequest'
+      responses:
+        '200':
+          description: Preference updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+  /device-tokens:
+    get:
+      operationId: listDeviceTokens
+      tags: [Device Tokens]
+      summary: List current user device tokens
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: Registered device tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceToken'
+    post:
+      operationId: registerDeviceToken
+      tags: [Device Tokens]
+      summary: Register a device token for push notifications
+      security:
+        - access-token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceTokenRequest'
+      responses:
+        '200':
+          description: Device token registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceToken'
+  /users:
+    get:
+      operationId: listUsers
+      tags: [Users]
+      summary: List users
+      security:
+        - access-token: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      tags: [Users]
+      summary: Create user
+      security:
+        - access-token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: Email already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    access-token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, fullName, password]
+      properties:
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          maxLength: 255
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    CreateNotificationTemplateRequest:
+      type: object
+      required: [name, channel, titleTemplate, bodyTemplate]
+      properties:
+        name:
+          type: string
+        channel:
+          type: string
+          enum: [email, sms, push]
+        titleTemplate:
+          type: string
+        bodyTemplate:
+          type: string
+        variablesSchema:
+          type: object
+    NotificationTemplate:
+      type: object
+      required: [id, name, channel, titleTemplate, bodyTemplate, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        channel:
+          type: string
+          enum: [email, sms, push]
+        titleTemplate:
+          type: string
+        bodyTemplate:
+          type: string
+        variablesSchema:
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateNotificationRequest:
+      type: object
+      required: [templateId, eventType, data]
+      properties:
+        templateId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        data:
+          type: object
+        priority:
+          type: string
+          enum: [critical, normal, bulk]
+        dedupeKey:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+    Notification:
+      type: object
+      required: [id, userId, templateId, eventType, data, status, priority, dedupeKey, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        templateId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        data:
+          type: object
+        status:
+          type: string
+          enum: [pending, processing, sent, skipped, retrying, failed, dead_lettered]
+        priority:
+          type: string
+          enum: [critical, normal, bulk]
+        dedupeKey:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    NotificationDelivery:
+      type: object
+      required: [id, notificationId, channel, provider, status, retryCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        notificationId:
+          type: string
+          format: uuid
+        channel:
+          type: string
+        provider:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, skipped, failed, dead_lettered]
+        retryCount:
+          type: integer
+        errorMessage:
+          type: string
+          nullable: true
+        providerMessageId:
+          type: string
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationLog:
+      type: object
+      required: [id, notificationId, event, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        notificationId:
+          type: string
+          format: uuid
+        event:
+          type: string
+        metadata:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+    UpsertNotificationPreferenceRequest:
+      type: object
+      required: [notificationType, channel, enabled]
+      properties:
+        notificationType:
+          type: string
+        channel:
+          type: string
+          enum: [email, sms, push]
+        enabled:
+          type: boolean
+    NotificationPreference:
+      type: object
+      required: [id, userId, notificationType, channel, enabled]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        notificationType:
+          type: string
+        channel:
+          type: string
+        enabled:
+          type: boolean
+    RegisterDeviceTokenRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [ios, android, web]
+    DeviceToken:
+      type: object
+      required: [id, userId, token, platform, isActive]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        token:
+          type: string
+        platform:
+          type: string
+        isActive:
+          type: boolean
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateUserRequest:
+      type: object
+      required: [email, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        fullName:
+          type: string
+          maxLength: 255
+          example: John Doe
+    User:
+      type: object
+      required: [id, email, fullName, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+    Readiness:
+      type: object
+      required: [status, ready, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        ready:
+          type: boolean
+        checks:
+          type: object
+          required: [database, mq]
+          properties:
+            database:
+              type: string
+              enum: [up, down]
+            mq:
+              type: string
+              enum: [up, down]
+

@@ -1,0 +1,9 @@
+# Set default owner for all files. Replace with your actual GitHub handle/team.
+* @your-org/backend-owners
+
+# High-risk areas require senior review.
+/src/common/db/migrations/* @your-org/backend-owners @your-org/platform-owners
+/.github/workflows/* @your-org/backend-owners @your-org/platform-owners
+/src/common/errors/* @your-org/backend-owners
+/src/common/mq/* @your-org/backend-owners
+/openapi/* @your-org/backend-owners
