@@ -10,6 +10,7 @@ export type AppConfig = {
     host: string;
     port: number;
     database: string;
+    schema?: string;
     username: string;
     password: string;
     synchronize: false;
@@ -86,6 +87,7 @@ export function loadAppConfig(env: ValidatedEnv = process.env): AppConfig {
       host: readString(env, 'DB_HOST', 'localhost'),
       port: readNumber(env, 'DB_PORT', 5432),
       database: readString(env, 'DB_NAME', 'backend'),
+      schema: env.DB_SCHEMA || undefined,
       username: readString(env, 'DB_USER', 'backend'),
       password: readString(env, 'DB_PASSWORD', 'backend'),
       synchronize: false,

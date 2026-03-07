@@ -29,4 +29,10 @@ describe('OpenAPI notification contract', () => {
     expect(contract).toContain('dead_lettered');
     expect(contract).toContain('summary: List lifecycle log entries for a notification');
   });
+
+  it('documents admin-only notification template access and user roles', () => {
+    expect(contract).toContain('/notification-templates:');
+    expect(contract).toContain('description: Admin role required');
+    expect(contract).toContain('enum: [user, admin]');
+  });
 });

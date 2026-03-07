@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/auth/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/auth/authenticated-user.interface';
@@ -23,6 +23,7 @@ export class NotificationPreferencesController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     operationId: 'upsertNotificationPreference',
     summary: 'Create or update a notification preference',

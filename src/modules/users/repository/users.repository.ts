@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserEntity } from '../entity/user.entity';
+import { UserRole } from '../user-role';
 
 @Injectable()
 export class UsersRepository {
@@ -33,7 +34,12 @@ export class UsersRepository {
       email: dto.email,
       fullName: dto.fullName,
       isActive: true,
+      role: 'user',
     });
     return repository.save(entity);
+  }
+
+  async updateRole(id: string, role: UserRole, manager?: EntityManager): Promise<void> {
+    await this.getRepository(manager).update({ id }, { role });
   }
 }

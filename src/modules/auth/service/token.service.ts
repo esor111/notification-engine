@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
 import { appConfig } from '../../../common/config/configuration';
+import { UserRole } from '../../users/user-role';
 
 type TokenPair = {
   accessToken: string;
@@ -14,13 +15,14 @@ export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
   async issueTokenPair(
-    user: { id: string; email: string },
+    user: { id: string; email: string; role: UserRole },
     sessionId = randomUUID(),
   ): Promise<TokenPair> {
     const accessToken = await this.jwtService.signAsync(
       {
         sub: user.id,
         email: user.email,
+        role: user.role,
       },
       {
         secret: appConfig.auth.accessTokenSecret,

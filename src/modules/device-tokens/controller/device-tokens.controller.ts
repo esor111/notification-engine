@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/auth/current-user.decorator';
 import { AuthenticatedUser } from '../../../common/auth/authenticated-user.interface';
@@ -20,6 +20,7 @@ export class DeviceTokensController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     operationId: 'registerDeviceToken',
     summary: 'Register a device token for push notifications',

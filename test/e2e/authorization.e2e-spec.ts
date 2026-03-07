@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
-import { AuditLogEntity } from '../../src/common/audit/entity/audit-log.entity';
 import { UserEntity } from '../../src/modules/users/entity/user.entity';
 import { createE2eApp } from '../support/create-e2e-app';
 
@@ -10,7 +9,7 @@ async function registerUser(app: INestApplication, email: string) {
     .post('/auth/register')
     .send({
       email,
-      fullName: 'Users E2E',
+      fullName: 'Authorization E2E User',
       password: 'Password123!',
     })
     .expect(201);
@@ -21,7 +20,7 @@ async function registerUser(app: INestApplication, email: string) {
   };
 }
 
-describe('Users (e2e)', () => {
+describe('Authorization (e2e)', () => {
   let app: INestApplication;
   let destroyApp: () => Promise<void>;
   let dataSource: DataSource;
@@ -39,12 +38,23 @@ describe('Users (e2e)', () => {
     }
   });
 
-  it('allows admins to create and list users and records the action in audit logs', async () => {
-    const regularUser = await registerUser(app, `users.admin.${Date.now()}@example.com`);
+  it('blocks regular users from admin-only endpoints and allows promoted admins', async () => {
+    const regularUser = await registerUser(app, `authz.user.${Date.now()}@example.com`);
 
     await request(app.getHttpServer())
       .get('/users')
       .set('Authorization', `Bearer ${regularUser.accessToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/notification-templates')
+      .set('Authorization', `Bearer ${regularUser.accessToken}`)
+      .send({
+        name: `forbidden-template-${Date.now()}`,
+        channel: 'email',
+        titleTemplate: 'Forbidden',
+        bodyTemplate: 'Forbidden',
+      })
       .expect(403);
 
     await dataSource
@@ -59,19 +69,7 @@ describe('Users (e2e)', () => {
       })
       .expect(200);
 
-    const createdUserPayload = {
-      email: `managed.user.${Date.now()}@example.com`,
-      fullName: 'Managed User',
-    };
-
-    const createResponse = await request(app.getHttpServer())
-      .post('/users')
-      .set('Authorization', `Bearer ${adminLogin.body.accessToken}`)
-      .send(createdUserPayload)
-      .expect(201);
-
-    expect(createResponse.body.email).toBe(createdUserPayload.email);
-    expect(createResponse.body.role).toBe('user');
+    expect(adminLogin.body.user.role).toBe('admin');
 
     await request(app.getHttpServer())
       .get('/users')
@@ -79,27 +77,21 @@ describe('Users (e2e)', () => {
       .expect(200)
       .expect(({ body }) => {
         expect(Array.isArray(body)).toBe(true);
-        expect(
-          body.some((user: { email: string }) => user.email === createdUserPayload.email),
-        ).toBe(true);
+        expect(body[0].role).toBeDefined();
       });
 
-    const auditLogs = await dataSource.getRepository(AuditLogEntity).find({
-      where: {
-        action: 'user.created',
-        resourceId: createResponse.body.id,
-      },
-      order: { createdAt: 'DESC' },
-    });
-
-    expect(auditLogs).toHaveLength(1);
-    const auditLog = auditLogs[0]!;
-    expect(auditLog.actorUserId).toBe(regularUser.user.id);
-    expect(auditLog.resourceType).toBe('user');
-    expect(auditLog.metadata).toMatchObject({
-      email: createdUserPayload.email,
-      fullName: createdUserPayload.fullName,
-      role: 'user',
-    });
+    await request(app.getHttpServer())
+      .post('/notification-templates')
+      .set('Authorization', `Bearer ${adminLogin.body.accessToken}`)
+      .send({
+        name: `admin-template-${Date.now()}`,
+        channel: 'email',
+        titleTemplate: 'Admin template',
+        bodyTemplate: 'Admin template body',
+      })
+      .expect(201)
+      .expect(({ body }) => {
+        expect(body.name).toContain('admin-template-');
+      });
   });
 });

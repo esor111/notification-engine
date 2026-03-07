@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuditService } from '../../common/audit/audit.service';
 import { DeviceTokensController } from '../device-tokens/controller/device-tokens.controller';
 import { DeviceTokenEntity } from '../device-tokens/entity/device-token.entity';
 import { DeviceTokensRepository } from '../device-tokens/repository/device-tokens.repository';
@@ -63,6 +64,7 @@ import { NotificationsService } from './service/notifications.service';
     EmailNotificationProvider,
     PushNotificationProvider,
     UsersRepository,
+    AuditService,
   ],
   exports: [NotificationTemplatesService, NotificationsService],
 })

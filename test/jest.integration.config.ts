@@ -3,11 +3,13 @@ import type { Config } from 'jest';
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '..',
+  roots: ['<rootDir>/src', '<rootDir>/test'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.ts$': 'ts-jest',
   },
   testRegex: 'test/integration/.*\\.integration\\.spec\\.ts$',
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 };
 
 export default config;

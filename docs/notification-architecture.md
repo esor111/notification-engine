@@ -20,3 +20,13 @@
 
 ## V1 Tradeoff
 This version supports one channel per template to keep the codebase small and explicit. Multi-channel fan-out can be added later without replacing the core tables.
+
+## Current Dev Mode
+- Email and push providers are mocked through console-backed providers.
+- Local sample data is seeded through `npm run seed:notification-mocks`.
+- The mock dataset lives in `src/modules/notifications/mock/mock-notification-data.ts`.
+
+## Future Integration Boundary
+- When the dedicated notification microservice or real providers are ready, replace only the provider implementations and queue publishing targets.
+- Keep `notifications`, `notification_deliveries`, `notification_logs`, preferences, and device tokens as the source of truth for lifecycle state.
+- Do not move delivery state tracking into provider adapters; agents should still find the lifecycle in the notification module first.

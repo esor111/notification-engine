@@ -3,7 +3,10 @@ import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { AddAuthTables1710000001000 } from '../../src/common/db/migrations/1710000001000-AddAuthTables';
 import { AddNotificationDomain1710000002000 } from '../../src/common/db/migrations/1710000002000-AddNotificationDomain';
+import { AddUserRoles1710000003000 } from '../../src/common/db/migrations/1710000003000-AddUserRoles';
+import { CreateAuditLogs1710000004000 } from '../../src/common/db/migrations/1710000004000-CreateAuditLogs';
 import { CreateUsersTable1710000000000 } from '../../src/common/db/migrations/1710000000000-CreateUsersTable';
+import { AuditLogEntity } from '../../src/common/audit/entity/audit-log.entity';
 import { OutboxEventEntity } from '../../src/common/mq/entities/outbox-event.entity';
 import { ProcessedMessageEntity } from '../../src/common/mq/entities/processed-message.entity';
 import { LocalCredentialEntity } from '../../src/modules/auth/entity/local-credential.entity';
@@ -55,11 +58,14 @@ export async function createPostgresTestHarness(): Promise<PostgresTestHarness> 
       NotificationLogEntity,
       OutboxEventEntity,
       ProcessedMessageEntity,
+      AuditLogEntity,
     ],
     migrations: [
       CreateUsersTable1710000000000,
       AddAuthTables1710000001000,
       AddNotificationDomain1710000002000,
+      AddUserRoles1710000003000,
+      CreateAuditLogs1710000004000,
     ],
   });
 

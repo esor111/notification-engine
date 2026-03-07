@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/roles.guard';
 import { appConfig } from '../../common/config/configuration';
 import { UserEntity } from '../users/entity/user.entity';
 import { UsersRepository } from '../users/repository/users.repository';
@@ -33,6 +34,10 @@ import { TokenService } from './service/token.service';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
   exports: [AuthService],

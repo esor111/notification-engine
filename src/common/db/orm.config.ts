@@ -11,6 +11,7 @@ import { UserEntity } from '../../modules/users/entity/user.entity';
 import { dbConfig } from './orm.base.config';
 import { OutboxEventEntity } from '../mq/entities/outbox-event.entity';
 import { ProcessedMessageEntity } from '../mq/entities/processed-message.entity';
+import { AuditLogEntity } from '../audit/entity/audit-log.entity';
 
 export function getTypeOrmConfig(): TypeOrmModuleOptions {
   return {
@@ -18,6 +19,7 @@ export function getTypeOrmConfig(): TypeOrmModuleOptions {
     host: dbConfig.host,
     port: dbConfig.port,
     database: dbConfig.database,
+    schema: dbConfig.schema,
     username: dbConfig.username,
     password: dbConfig.password,
     synchronize: dbConfig.synchronize,
@@ -34,6 +36,7 @@ export function getTypeOrmConfig(): TypeOrmModuleOptions {
       NotificationLogEntity,
       OutboxEventEntity,
       ProcessedMessageEntity,
+      AuditLogEntity,
     ],
     migrations: ['dist/src/common/db/migrations/*.js'],
     migrationsRun: false,

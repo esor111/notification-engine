@@ -7,6 +7,8 @@ This repository is optimized for autonomous coding agents and fast, reliable del
 - `npm run test:smoke`: run a quick local health check
 - `npm run doctor`: validate local developer setup
 - `npm run db:migrate`: run DB migrations
+- `npm run seed:notification-mocks`: seed stable local notification fixtures
+- `npm run auth:promote-admin -- user@example.com`: promote a local user to admin
 
 ## Guardrails
 - Keep API changes contract-first in `openapi/openapi.yaml`.
@@ -33,14 +35,17 @@ This repository is optimized for autonomous coding agents and fast, reliable del
 
 ## Auth Rules
 - Auth is secure-by-default via a global JWT guard.
+- Authorization is role-based with `user` and `admin`.
 - Public endpoints must opt out explicitly with `@Public()`.
 - Password hashing belongs only in `src/modules/auth/service/password.service.ts`.
 - Refresh token rotation belongs only in `src/modules/auth/service/auth.service.ts`.
+- Admin-only routes must use `@Roles('admin')`.
 
 ## Notification Rules
 - New notifications are created through `src/modules/notifications/service/notifications.service.ts`.
 - Dispatch and retry logic belongs only in `src/modules/notifications/service/notification-dispatch.service.ts`.
 - Delivery retries are rescheduled via the outbox, not via RabbitMQ nack loops.
+- Stable local notification fixtures live in `src/modules/notifications/mock/mock-notification-data.ts`.
 
 ## Required Before Merge
 - `npm run verify` passes

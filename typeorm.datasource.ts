@@ -11,12 +11,14 @@ import { NotificationLogEntity } from './src/modules/notifications/entity/notifi
 import { OutboxEventEntity } from './src/common/mq/entities/outbox-event.entity';
 import { ProcessedMessageEntity } from './src/common/mq/entities/processed-message.entity';
 import { UserEntity } from './src/modules/users/entity/user.entity';
+import { AuditLogEntity } from './src/common/audit/entity/audit-log.entity';
 
 export default new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST ?? 'localhost',
   port: Number(process.env.DB_PORT ?? 5432),
   database: process.env.DB_NAME ?? 'backend',
+  schema: process.env.DB_SCHEMA || undefined,
   username: process.env.DB_USER ?? 'backend',
   password: process.env.DB_PASSWORD ?? 'backend',
   synchronize: false,
@@ -32,6 +34,7 @@ export default new DataSource({
     NotificationLogEntity,
     OutboxEventEntity,
     ProcessedMessageEntity,
+    AuditLogEntity,
   ],
   migrations: ['src/common/db/migrations/*.ts'],
 });

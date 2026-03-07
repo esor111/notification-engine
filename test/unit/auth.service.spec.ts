@@ -79,6 +79,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
       createdAt: new Date('2026-03-07T00:00:00.000Z'),
       updatedAt: new Date('2026-03-07T00:00:00.000Z'),
     });
@@ -87,6 +88,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
       createdAt: new Date('2026-03-07T00:00:00.000Z'),
       updatedAt: new Date('2026-03-07T00:00:00.000Z'),
     });
@@ -125,6 +127,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
       createdAt: new Date('2026-03-07T00:00:00.000Z'),
       updatedAt: new Date('2026-03-07T00:00:00.000Z'),
     });
@@ -138,6 +141,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
       createdAt: new Date('2026-03-07T00:00:00.000Z'),
       updatedAt: new Date('2026-03-07T00:00:00.000Z'),
     });
@@ -168,6 +172,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
       createdAt: new Date('2026-03-07T00:00:00.000Z'),
       updatedAt: new Date('2026-03-07T00:00:00.000Z'),
     });
@@ -185,6 +190,7 @@ describe('AuthService', () => {
       email: 'john@example.com',
       fullName: 'John Doe',
       isActive: true,
+      role: 'user',
     });
     localCredentialsRepository.findByUserId.mockResolvedValue({
       userId: 'user-1',

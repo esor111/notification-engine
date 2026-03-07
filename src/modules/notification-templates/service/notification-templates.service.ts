@@ -1,4 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { AuditService } from '../../../common/audit/audit.service';
 import { NotificationTemplateDto } from '../dto/notification-template.dto';
 import { CreateNotificationTemplateDto } from '../dto/create-notification-template.dto';
 import { NotificationTemplatesRepository } from '../repository/notification-templates.repository';
@@ -19,15 +21,40 @@ function toDto(entity: NotificationTemplateEntity): NotificationTemplateDto {
 
 @Injectable()
 export class NotificationTemplatesService {
-  constructor(private readonly templatesRepository: NotificationTemplatesRepository) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly templatesRepository: NotificationTemplatesRepository,
+    private readonly auditService: AuditService,
+  ) {}
 
-  async create(dto: CreateNotificationTemplateDto): Promise<NotificationTemplateDto> {
-    const existing = await this.templatesRepository.findByName(dto.name);
-    if (existing) {
-      throw new ConflictException('A notification template with this name already exists');
-    }
+  async create(
+    dto: CreateNotificationTemplateDto,
+    actorUserId?: string,
+  ): Promise<NotificationTemplateDto> {
+    const template = await this.dataSource.transaction(async (manager) => {
+      const existing = await this.templatesRepository.findByName(dto.name, manager);
+      if (existing) {
+        throw new ConflictException('A notification template with this name already exists');
+      }
 
-    const template = await this.templatesRepository.createAndSave(dto);
+      const createdTemplate = await this.templatesRepository.createAndSave(dto, manager);
+      await this.auditService.log(
+        {
+          actorUserId,
+          action: 'notification_template.created',
+          resourceType: 'notification_template',
+          resourceId: createdTemplate.id,
+          metadata: {
+            name: createdTemplate.name,
+            channel: createdTemplate.channel,
+          },
+        },
+        manager,
+      );
+
+      return createdTemplate;
+    });
+
     return toDto(template);
   }
 

@@ -14,8 +14,10 @@ This is a NestJS-first backend scaffold designed for predictable, autonomous dev
 2. Start infrastructure: `docker compose -f docker-compose.dev.yml up -d`
 3. Install packages: `npm install`
 4. Run migrations: `npm run db:migrate`
-5. Run app: `npm run start:dev`
-6. Verify quality gate: `npm run verify`
+5. Seed local notification mocks: `npm run seed:notification-mocks`
+6. Run app: `npm run start:dev`
+7. Verify quality gate: `npm run verify`
+8. Promote an admin if needed: `npm run auth:promote-admin -- user@example.com`
 
 ## Available Endpoints
 - `GET /health`
@@ -30,6 +32,7 @@ This is a NestJS-first backend scaffold designed for predictable, autonomous dev
 - `GET /notifications`
 - `POST /notifications`
 - `GET /notifications/:id/deliveries`
+- `GET /notifications/:id/logs`
 - `GET /notification-preferences`
 - `POST /notification-preferences`
 - `GET /device-tokens`
@@ -45,9 +48,12 @@ This is a NestJS-first backend scaffold designed for predictable, autonomous dev
 - Readiness checks validate DB and RabbitMQ connectivity
 - Auth is secure-by-default with an explicit `@Public()` escape hatch
 - Refresh tokens are rotated and stored as hashes only
+- Role-based authorization protects admin-only endpoints
 - Notification delivery retries are rescheduled through the outbox and tracked in the database
+- Local notification delivery currently uses console-backed mock providers plus seeded sample records
 
 ## Core Docs
 - `docs/auth-flow.md`
 - `docs/notification-architecture.md`
+- `docs/mock-notification-data.md`
 - `docs/backend-agent-playbook.md`

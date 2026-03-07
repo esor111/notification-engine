@@ -10,6 +10,7 @@ import { NotificationsService } from '../../src/modules/notifications/service/no
 import { NotificationDeliveryEntity } from '../../src/modules/notifications/entity/notification-delivery.entity';
 import { UsersRepository } from '../../src/modules/users/repository/users.repository';
 import { UserEntity } from '../../src/modules/users/entity/user.entity';
+import { AuditService } from '../../src/common/audit/audit.service';
 import { OutboxEventEntity } from '../../src/common/mq/entities/outbox-event.entity';
 import { OutboxService } from '../../src/common/mq/outbox.service';
 import { NotificationLogEntity } from '../../src/modules/notifications/entity/notification-log.entity';
@@ -44,8 +45,13 @@ describe('Notifications integration', () => {
       dataSource.getRepository(NotificationLogEntity),
     );
     const outboxService = new OutboxService(dataSource.getRepository(OutboxEventEntity));
+    const auditService = new AuditService(dataSource);
 
-    templatesService = new NotificationTemplatesService(templatesRepository);
+    templatesService = new NotificationTemplatesService(
+      dataSource,
+      templatesRepository,
+      auditService,
+    );
     notificationsService = new NotificationsService(
       dataSource,
       notificationsRepository,

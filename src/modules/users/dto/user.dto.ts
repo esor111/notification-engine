@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserEntity } from '../entity/user.entity';
+import { USER_ROLES } from '../user-role';
 
 export class UserDto {
   @ApiProperty({ format: 'uuid' })
@@ -10,6 +11,9 @@ export class UserDto {
 
   @ApiProperty({ example: 'John Doe' })
   fullName!: string;
+
+  @ApiProperty({ enum: USER_ROLES })
+  role!: string;
 
   @ApiProperty()
   createdAt!: string;
@@ -23,6 +27,7 @@ export function toUserDto(entity: UserEntity): UserDto {
     id: entity.id,
     email: entity.email,
     fullName: entity.fullName,
+    role: entity.role,
     createdAt: entity.createdAt.toISOString(),
     updatedAt: entity.updatedAt.toISOString(),
   };

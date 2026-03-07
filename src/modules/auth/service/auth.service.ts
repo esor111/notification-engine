@@ -145,7 +145,7 @@ export class AuthService {
 
     const sessionId = randomUUID();
     const tokens = await this.tokenService.issueTokenPair(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       sessionId,
     );
     await this.refreshSessionsRepository.createAndSave(

@@ -1,5 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { DataSource, QueryFailedError } from 'typeorm';
+import { AuditService } from '../../../common/audit/audit.service';
 import { mqConfig } from '../../../common/mq/mq.config';
 import { OutboxService } from '../../../common/mq/outbox.service';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -12,9 +13,10 @@ export class UsersService {
     private readonly dataSource: DataSource,
     private readonly usersRepository: UsersRepository,
     private readonly outboxService: OutboxService,
+    private readonly auditService: AuditService,
   ) {}
 
-  async create(dto: CreateUserDto): Promise<UserDto> {
+  async create(dto: CreateUserDto, actorUserId?: string): Promise<UserDto> {
     try {
       const user = await this.dataSource.transaction(async (manager) => {
         const existingUser = await this.usersRepository.findByEmail(dto.email, manager);
@@ -34,6 +36,21 @@ export class UsersService {
               userId: createdUser.id,
               email: createdUser.email,
               occurredAt: new Date().toISOString(),
+            },
+          },
+          manager,
+        );
+
+        await this.auditService.log(
+          {
+            actorUserId,
+            action: 'user.created',
+            resourceType: 'user',
+            resourceId: createdUser.id,
+            metadata: {
+              email: createdUser.email,
+              fullName: createdUser.fullName,
+              role: createdUser.role,
             },
           },
           manager,
