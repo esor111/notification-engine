@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { DataSource } from 'typeorm';
 import { mqConfig } from '../../../common/mq/mq.config';
 import { OutboxService } from '../../../common/mq/outbox.service';
+import { notificationCreated } from '../../../common/observability/metrics';
 import { NotificationTemplatesService } from '../../notification-templates/service/notification-templates.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { NotificationDeliveryDto } from '../dto/notification-delivery.dto';
@@ -115,6 +116,12 @@ export class NotificationsService {
         },
         manager,
       );
+
+      // Record metric
+      notificationCreated.inc({
+        event_type: createdNotification.eventType,
+        priority: createdNotification.priority,
+      });
 
       return createdNotification;
     });

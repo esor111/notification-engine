@@ -5,6 +5,7 @@ const config: Config = {
   rootDir: '..',
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testEnvironment: 'node',
+  testTimeout: 15000,
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },

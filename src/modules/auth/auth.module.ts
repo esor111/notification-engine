@@ -5,8 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { appConfig } from '../../common/config/configuration';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { UserEntity } from '../users/entity/user.entity';
 import { UsersRepository } from '../users/repository/users.repository';
+import { AuthLoginSucceededConsumer } from './consumer/auth-login-succeeded.consumer';
 import { AuthController } from './controller/auth.controller';
 import { LocalCredentialEntity } from './entity/local-credential.entity';
 import { RefreshSessionEntity } from './entity/refresh-session.entity';
@@ -21,11 +23,13 @@ import { TokenService } from './service/token.service';
     JwtModule.register({
       secret: appConfig.auth.accessTokenSecret,
     }),
+    NotificationsModule,
     TypeOrmModule.forFeature([UserEntity, LocalCredentialEntity, RefreshSessionEntity]),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthLoginSucceededConsumer,
     PasswordService,
     TokenService,
     UsersRepository,

@@ -35,6 +35,7 @@ export class UsersService {
             payload: {
               userId: createdUser.id,
               email: createdUser.email,
+              fullName: createdUser.fullName,
               occurredAt: new Date().toISOString(),
             },
           },

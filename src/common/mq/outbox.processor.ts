@@ -8,6 +8,7 @@ import {
 import { appConfig } from '../config/configuration';
 import { MQ_MESSAGE_PUBLISHER, MqMessagePublisher } from './message.publisher';
 import { OutboxService } from './outbox.service';
+import { outboxEventsProcessed } from '../observability/metrics';
 
 @Injectable()
 export class OutboxProcessor implements OnApplicationBootstrap, OnModuleDestroy {
@@ -57,12 +58,14 @@ export class OutboxProcessor implements OnApplicationBootstrap, OnModuleDestroy 
             payload: event.payload,
           });
           await this.outboxService.markDispatched(event.id);
+          outboxEventsProcessed.inc({ status: 'dispatched' });
         } catch (error) {
           await this.outboxService.markFailed(
             event.id,
             event.attempts,
             error instanceof Error ? error.message : 'Unknown publish error',
           );
+          outboxEventsProcessed.inc({ status: 'failed' });
           this.logger.error(
             `Failed to dispatch outbox event ${event.id}: ${
               error instanceof Error ? error.message : 'Unknown publish error'

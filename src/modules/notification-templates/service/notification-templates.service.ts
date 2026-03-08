@@ -63,6 +63,10 @@ export class NotificationTemplatesService {
     return templates.map(toDto);
   }
 
+  async findEntityByName(name: string): Promise<NotificationTemplateEntity | null> {
+    return this.templatesRepository.findByName(name);
+  }
+
   async getOrThrow(id: string): Promise<NotificationTemplateEntity> {
     const template = await this.templatesRepository.findById(id);
     if (!template) {

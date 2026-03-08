@@ -65,6 +65,16 @@ export const mockNotificationData: {
   },
   templates: [
     {
+      name: 'user-welcome-email',
+      channel: 'email',
+      titleTemplate: 'Welcome, {{fullName}}',
+      bodyTemplate: 'Your account for {{email}} is ready. You can start using notifications now.',
+      variablesSchema: {
+        fullName: { type: 'string' },
+        email: { type: 'string' },
+      },
+    },
+    {
       name: 'order-shipped-email',
       channel: 'email',
       titleTemplate: 'Your order {{orderId}} shipped',

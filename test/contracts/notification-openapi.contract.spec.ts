@@ -35,4 +35,11 @@ describe('OpenAPI notification contract', () => {
     expect(contract).toContain('description: Admin role required');
     expect(contract).toContain('enum: [user, admin]');
   });
+
+  it('documents notification operations endpoints for backlog and dead letters', () => {
+    expect(contract).toContain('/notification-ops/outbox:');
+    expect(contract).toContain('/notification-ops/dead-lettered:');
+    expect(contract).toContain('    NotificationOutboxEvent:');
+    expect(contract).toContain('    DeadLetteredNotification:');
+  });
 });

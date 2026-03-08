@@ -359,6 +359,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeviceToken'
+  /notification-ops/outbox:
+    get:
+      operationId: listNotificationOutboxEvents
+      tags: [Notification Operations]
+      summary: List notification-related outbox events
+      security:
+        - access-token: []
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, processing, dispatched, failed]
+        - in: query
+          name: queue
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Outbox events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationOutboxEvent'
+        '403':
+          description: Admin role required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /notification-ops/dead-lettered:
+    get:
+      operationId: listDeadLetteredNotifications
+      tags: [Notification Operations]
+      summary: List dead-lettered notifications
+      security:
+        - access-token: []
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Dead-lettered notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeadLetteredNotification'
+        '403':
+          description: Admin role required
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /users:
     get:
       operationId: listUsers
@@ -662,6 +733,77 @@ components:
           type: string
           format: date-time
           nullable: true
+    NotificationOutboxEvent:
+      type: object
+      required: [id, eventType, aggregateType, aggregateId, queue, status, attempts, occurredAt, availableAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        aggregateType:
+          type: string
+        aggregateId:
+          type: string
+        queue:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, dispatched, failed]
+        attempts:
+          type: integer
+        lastError:
+          type: string
+          nullable: true
+        occurredAt:
+          type: string
+          format: date-time
+        availableAt:
+          type: string
+          format: date-time
+        dispatchedAt:
+          type: string
+          format: date-time
+          nullable: true
+    DeadLetteredNotification:
+      type: object
+      required: [id, userId, templateId, eventType, priority, dedupeKey, data, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        templateId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        priority:
+          type: string
+          enum: [critical, normal, bulk]
+        dedupeKey:
+          type: string
+        data:
+          type: object
+        channel:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        lastError:
+          type: string
+          nullable: true
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
     CreateUserRequest:
       type: object
       required: [email, fullName]

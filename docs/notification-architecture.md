@@ -26,6 +26,11 @@ This version supports one channel per template to keep the codebase small and ex
 - Local sample data is seeded through `npm run seed:notification-mocks`.
 - The mock dataset lives in `src/modules/notifications/mock/mock-notification-data.ts`.
 
+## Operations
+- Admins can inspect the outbox backlog at `GET /notification-ops/outbox`.
+- Admins can inspect dead-lettered notifications at `GET /notification-ops/dead-lettered`.
+- These endpoints are for debugging and agent workflows, not end-user product features.
+
 ## Future Integration Boundary
 - When the dedicated notification microservice or real providers are ready, replace only the provider implementations and queue publishing targets.
 - Keep `notifications`, `notification_deliveries`, `notification_logs`, preferences, and device tokens as the source of truth for lifecycle state.

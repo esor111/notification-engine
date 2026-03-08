@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuditService } from '../../common/audit/audit.service';
+import { OutboxEventEntity } from '../../common/mq/entities/outbox-event.entity';
 import { DeviceTokensController } from '../device-tokens/controller/device-tokens.controller';
 import { DeviceTokenEntity } from '../device-tokens/entity/device-token.entity';
 import { DeviceTokensRepository } from '../device-tokens/repository/device-tokens.repository';
@@ -18,6 +19,7 @@ import { PushNotificationProvider } from '../providers/push/push-notification.pr
 import { UserEntity } from '../users/entity/user.entity';
 import { UsersRepository } from '../users/repository/users.repository';
 import { NotificationDispatchConsumer } from './consumer/notification-dispatch.consumer';
+import { NotificationOperationsController } from './controller/notification-operations.controller';
 import { NotificationsController } from './controller/notifications.controller';
 import { NotificationDeliveryEntity } from './entity/notification-delivery.entity';
 import { NotificationEntity } from './entity/notification.entity';
@@ -26,6 +28,7 @@ import { NotificationDeliveriesRepository } from './repository/notification-deli
 import { NotificationLogsRepository } from './repository/notification-logs.repository';
 import { NotificationsRepository } from './repository/notifications.repository';
 import { NotificationDispatchService } from './service/notification-dispatch.service';
+import { NotificationOperationsService } from './service/notification-operations.service';
 import { NotificationRendererService } from './service/notification-renderer.service';
 import { NotificationsService } from './service/notifications.service';
 
@@ -39,6 +42,7 @@ import { NotificationsService } from './service/notifications.service';
       NotificationLogEntity,
       UserNotificationPreferenceEntity,
       DeviceTokenEntity,
+      OutboxEventEntity,
     ]),
   ],
   controllers: [
@@ -46,6 +50,7 @@ import { NotificationsService } from './service/notifications.service';
     NotificationsController,
     NotificationPreferencesController,
     DeviceTokensController,
+    NotificationOperationsController,
   ],
   providers: [
     NotificationTemplatesRepository,
@@ -59,6 +64,7 @@ import { NotificationsService } from './service/notifications.service';
     DeviceTokensService,
     NotificationsService,
     NotificationDispatchService,
+    NotificationOperationsService,
     NotificationDispatchConsumer,
     NotificationRendererService,
     EmailNotificationProvider,

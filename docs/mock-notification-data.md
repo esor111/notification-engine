@@ -15,6 +15,9 @@ Notification delivery is currently in `mock mode` for local development. Provide
 - Full name: `Demo Notifications User`
 
 ## Seeded Templates
+- `user-welcome-email`
+  - Channel: `email`
+  - Event type used by internal producers: `account_updates`
 - `order-shipped-email`
   - Channel: `email`
   - Event type used by mocks: `order_updates`

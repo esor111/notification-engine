@@ -20,6 +20,7 @@ export type AppConfig = {
     url: string;
     queue: string;
     userCreatedQueue: string;
+    authEventsQueue: string;
     notificationEventsQueue: string;
     prefetchCount: number;
     outboxBatchSize: number;
@@ -97,6 +98,7 @@ export function loadAppConfig(env: ValidatedEnv = process.env): AppConfig {
       url: readString(env, 'RABBITMQ_URL', 'amqp://guest:guest@localhost:5672'),
       queue: readString(env, 'RABBITMQ_QUEUE', 'default'),
       userCreatedQueue: readString(env, 'USER_CREATED_QUEUE', 'user.created'),
+      authEventsQueue: readString(env, 'AUTH_EVENTS_QUEUE', 'auth.events'),
       notificationEventsQueue: readString(env, 'NOTIFICATION_EVENTS_QUEUE', 'notification.events'),
       prefetchCount: readNumber(env, 'MQ_PREFETCH_COUNT', 10),
       outboxBatchSize: readNumber(env, 'OUTBOX_BATCH_SIZE', 20),

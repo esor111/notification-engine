@@ -57,6 +57,11 @@ describe('Authorization (e2e)', () => {
       })
       .expect(403);
 
+    await request(app.getHttpServer())
+      .get('/notification-ops/outbox')
+      .set('Authorization', `Bearer ${regularUser.accessToken}`)
+      .expect(403);
+
     await dataSource
       .getRepository(UserEntity)
       .update({ id: regularUser.user.id }, { role: 'admin' });
@@ -92,6 +97,14 @@ describe('Authorization (e2e)', () => {
       .expect(201)
       .expect(({ body }) => {
         expect(body.name).toContain('admin-template-');
+      });
+
+    await request(app.getHttpServer())
+      .get('/notification-ops/outbox')
+      .set('Authorization', `Bearer ${adminLogin.body.accessToken}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(Array.isArray(body)).toBe(true);
       });
   });
 });

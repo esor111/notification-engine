@@ -10,17 +10,19 @@ import {
 } from '../../notifications/notification-template-names';
 import { NotificationsService } from '../../notifications/service/notifications.service';
 
-type UserCreatedPayload = {
+type AuthLoginSucceededPayload = {
   userId: string;
   email: string;
   fullName: string;
+  userAgent?: string;
+  ipAddress?: string;
   occurredAt: string;
 };
 
 @Injectable()
-export class UserCreatedConsumer implements OnApplicationBootstrap {
-  private readonly logger = new Logger(UserCreatedConsumer.name);
-  private readonly consumerName = 'user-created-audit-consumer';
+export class AuthLoginSucceededConsumer implements OnApplicationBootstrap {
+  private readonly logger = new Logger(AuthLoginSucceededConsumer.name);
+  private readonly consumerName = 'auth-login-succeeded-notification-consumer';
 
   constructor(
     private readonly rabbitMqClient: RabbitMqClient,
@@ -34,38 +36,40 @@ export class UserCreatedConsumer implements OnApplicationBootstrap {
       return;
     }
 
-    void this.rabbitMqClient.consume(mqConfig.userCreatedQueue, async (message) => {
+    void this.rabbitMqClient.consume(mqConfig.authEventsQueue, async (message) => {
       const messageId = message.messageId || `missing:${message.eventType}`;
       await this.processedMessagesService.processOnce(this.consumerName, messageId, async () => {
-        const payload = message.payload as unknown as UserCreatedPayload;
-        await this.handleUserCreated(payload);
+        const payload = message.payload as unknown as AuthLoginSucceededPayload;
+        await this.handleLoginSucceeded(payload);
       });
     });
   }
 
-  async handleUserCreated(payload: UserCreatedPayload): Promise<void> {
+  async handleLoginSucceeded(payload: AuthLoginSucceededPayload): Promise<void> {
     const template = await this.notificationTemplatesService.findEntityByName(
-      NOTIFICATION_TEMPLATE_NAMES.userWelcomeEmail,
+      NOTIFICATION_TEMPLATE_NAMES.securityLoginPush,
     );
 
     if (!template) {
       this.logger.warn(
-        `Skipping welcome notification for user=${payload.userId}; template ${NOTIFICATION_TEMPLATE_NAMES.userWelcomeEmail} is missing`,
+        `Skipping security login notification for user=${payload.userId}; template ${NOTIFICATION_TEMPLATE_NAMES.securityLoginPush} is missing`,
       );
       return;
     }
 
     await this.notificationsService.create(payload.userId, {
       templateId: template.id,
-      eventType: NOTIFICATION_EVENT_TYPES.accountUpdates,
+      eventType: NOTIFICATION_EVENT_TYPES.securityAlerts,
       data: {
         email: payload.email,
         fullName: payload.fullName,
+        deviceName: payload.userAgent ?? 'Unknown device',
+        location: payload.ipAddress ?? 'Unknown location',
       },
-      priority: 'normal',
-      dedupeKey: `user.created:${payload.userId}:welcome`,
+      priority: 'critical',
+      dedupeKey: `auth.login.succeeded:${payload.userId}:${payload.occurredAt}`,
     });
 
-    this.logger.log(`Created welcome notification for user=${payload.userId}`);
+    this.logger.log(`Created security login notification for user=${payload.userId}`);
   }
 }

@@ -3,6 +3,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { mqConfig } from '../../../common/mq/mq.config';
 import { OutboxService } from '../../../common/mq/outbox.service';
+import { authAttempts } from '../../../common/observability/metrics';
 import { UserDto, toUserDto } from '../../users/dto/user.dto';
 import { UsersRepository } from '../../users/repository/users.repository';
 import { LocalCredentialsRepository } from '../repository/local-credentials.repository';
@@ -56,11 +57,14 @@ export class AuthService {
           payload: {
             userId: user.id,
             email: user.email,
+            fullName: user.fullName,
             occurredAt: new Date().toISOString(),
           },
         },
         manager,
       );
+
+      authAttempts.inc({ type: 'register', status: 'success' });
 
       return this.createAuthResponse(user.id, user.email, meta, manager);
     });
@@ -72,11 +76,13 @@ export class AuthService {
   ): Promise<AuthResponseDto> {
     const user = await this.usersRepository.findByEmail(dto.email);
     if (!user || !user.isActive) {
+      authAttempts.inc({ type: 'login', status: 'failed' });
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const credential = await this.localCredentialsRepository.findByUserId(user.id);
     if (!credential) {
+      authAttempts.inc({ type: 'login', status: 'failed' });
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -85,12 +91,35 @@ export class AuthService {
       credential.passwordHash,
     );
     if (!passwordMatches) {
+      authAttempts.inc({ type: 'login', status: 'failed' });
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return this.dataSource.transaction((manager) =>
-      this.createAuthResponse(user.id, user.email, meta, manager),
-    );
+    return this.dataSource.transaction(async (manager) => {
+      const response = await this.createAuthResponse(user.id, user.email, meta, manager);
+      await this.outboxService.enqueue(
+        {
+          eventType: 'auth.login.succeeded',
+          aggregateType: 'user',
+          aggregateId: user.id,
+          queue: mqConfig.authEventsQueue,
+          dedupeKey: `auth.login.succeeded:${user.id}:${Date.now()}`,
+          payload: {
+            userId: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            userAgent: meta.userAgent,
+            ipAddress: meta.ipAddress,
+            occurredAt: new Date().toISOString(),
+          },
+        },
+        manager,
+      );
+
+      authAttempts.inc({ type: 'login', status: 'success' });
+
+      return response;
+    });
   }
 
   async refresh(

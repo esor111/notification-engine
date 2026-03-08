@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { appConfig } from '../../../common/config/configuration';
 import { mqConfig } from '../../../common/mq/mq.config';
 import { OutboxService } from '../../../common/mq/outbox.service';
+import { notificationDispatched, notificationDeliveryDuration } from '../../../common/observability/metrics';
 import { UsersRepository } from '../../users/repository/users.repository';
 import { DeviceTokensRepository } from '../../device-tokens/repository/device-tokens.repository';
 import { NotificationTemplatesRepository } from '../../notification-templates/repository/notification-templates.repository';
@@ -91,6 +92,8 @@ export class NotificationDispatchService {
         notification.userId,
       );
 
+      const deliveryDuration = (Date.now() - notification.createdAt.getTime()) / 1000;
+
       await this.dataSource.transaction(async (manager) => {
         await this.notificationDeliveriesRepository.createAndSave(
           {
@@ -124,9 +127,20 @@ export class NotificationDispatchService {
           manager,
         );
       });
+
+      // Record success metrics
+      notificationDispatched.inc({ channel: template.channel, status: 'sent' });
+      notificationDeliveryDuration.observe(
+        { channel: template.channel, provider: providerResult.provider },
+        deliveryDuration,
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Unknown notification delivery error';
+      
+      // Record failure metric
+      notificationDispatched.inc({ channel: template.channel, status: 'failed' });
+      
       await this.failNotification(notification.id, attempt, message, template.channel);
     }
   }
